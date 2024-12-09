@@ -1,0 +1,141 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>WebSocket Test</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f4f4f9;
+                color: #333;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+            }
+
+            .container {
+                text-align: center;
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                width: 100%;
+                max-width: 400px;
+            }
+
+            h1 {
+                color: #444;
+                margin-bottom: 20px;
+            }
+
+            button {
+                font-size: 16px;
+                margin: 10px 0;
+                padding: 10px 20px;
+                background-color: #007BFF;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+
+            button:hover {
+                background-color: #0056b3;
+            }
+
+            button:disabled {
+                background-color: #ccc;
+                cursor: not-allowed;
+            }
+
+            .logs {
+                margin-top: 20px;
+                max-height: 150px;
+                overflow-y: auto;
+                border: 1px solid #ddd;
+                background-color: #f9f9f9;
+                padding: 10px;
+                border-radius: 5px;
+                text-align: left;
+                font-size: 14px;
+                color: #555;
+            }
+
+            .log-entry {
+                margin-bottom: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>WebSocket Client</h1>
+            <button id="connect">Connect</button>
+            <button id="send" disabled>Send Message</button>
+            <button id="disconnect" disabled>Disconnect</button>
+
+            <div class="logs" id="logs">
+                <strong>Logs:</strong>
+            </div>
+        </div>
+
+        <script>
+            let socket;
+            const connectButton = document.getElementById('connect');
+            const sendButton = document.getElementById('send');
+            const disconnectButton = document.getElementById('disconnect');
+            const logsDiv = document.getElementById('logs');
+
+            function logMessage(message) {
+                const logEntry = document.createElement('div');
+                logEntry.classList.add('log-entry');
+                logEntry.textContent = message;
+                logsDiv.appendChild(logEntry);
+                logsDiv.scrollTop = logsDiv.scrollHeight;
+            }
+
+            connectButton.onclick = function () {
+                socket = new WebSocket('ws://localhost:8080/ws');
+
+                socket.onopen = () => {
+                    logMessage('Connected to WebSocket server.');
+                    connectButton.disabled = true;
+                    sendButton.disabled = false;
+                    disconnectButton.disabled = false;
+                };
+
+                socket.onmessage = event => {
+                    logMessage(`Server: ${event.data}`);
+                };
+
+                socket.onerror = error => {
+                    logMessage(`Error: ${error.message}`);
+                };
+
+                socket.onclose = () => {
+                    logMessage('Disconnected from WebSocket server.');
+                    connectButton.disabled = false;
+                    sendButton.disabled = true;
+                    disconnectButton.disabled = true;
+                };
+            };
+
+            sendButton.onclick = function () {
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    socket.send('Hello Server');
+                    logMessage('You: Hello Server');
+                }
+            };
+
+            disconnectButton.onclick = function () {
+                if (socket) {
+                    socket.close();
+                }
+            };
+        </script>
+    </body>
+    </html>
